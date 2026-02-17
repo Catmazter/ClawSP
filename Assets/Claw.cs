@@ -5,6 +5,7 @@ using System.Runtime.Remoting.Messaging;
 using Leap;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class Claw : MonoBehaviour
@@ -20,9 +21,16 @@ public class Claw : MonoBehaviour
     [SerializeField] float CamMoveSpeed = 1;
     [SerializeField] float CamTurnSpeed = 90;
     [SerializeField] Vector3 centerOffset = Vector3.zero;
-    Vector3 prevRightHandTrack = Vector3.zero;
 
+    Vector3 prevRightHandTrack = Vector3.zero;
+    Vector3 leftHandGrabPos = Vector3.zero;
+    Vector3 cameraGrabPos = Vector3.zero;
+
+    bool _isLeftGrabbing = false;
+    [SerializeField] float camGrabSpeed = 1.25f;
     [SerializeField] float rightHandTrackSpeed = 10;
+
+    float releaseObjTime = 0;
 
     /// OBJECTS ///
 
@@ -71,36 +79,56 @@ public class Claw : MonoBehaviour
 
             if (leftHand != null)
             {
-
-                float leftHandRoll = Mathf.Clamp(Mathf.DeltaAngle(leftHand.Rotation.eulerAngles.z, 0), -60, 60);
-                float leftHandPitch = Mathf.Clamp(Mathf.DeltaAngle(leftHand.Rotation.eulerAngles.x, 0), -60, 60);
-
-                if (Mathf.Abs(leftHandRoll) > 15) //death zone
+                if (!_isLeftGrabbing)
                 {
-                    float amount = leftHandRoll / 60.0f * CamMoveSpeed * Time.deltaTime;
-                    Camera.main.transform.Translate(amount, 0, 0, Space.World);
-                    centerPoint.transform.Translate(amount, 0, 0, Space.World);
 
-                    //float rAmount = leftHandRoll / 60.0f * CamTurnSpeed * Time.deltaTime;
-                    //Camera.main.transform.Rotate(0, rAmount, 0, Space.World);
-                    //centerPoint.transform.Rotate(0, rAmount, 0, Space.World);
+                    if (leftHand.PinchStrength >= grab)
+                    {
+                        _isLeftGrabbing = true;
+                        leftHandGrabPos = leftHand.PalmPosition;
+                        cameraGrabPos = centerPoint.position;
+                    }
                 }
-                if (Mathf.Abs(leftHandPitch) > 20)
+                else
                 {
-                    float amount = leftHandPitch / 60.0f * CamMoveSpeed * Time.deltaTime;
-                    Camera.main.transform.Translate(0, 0, amount, Space.World);
-                    centerPoint.transform.Translate(0, 0, amount, Space.World);
-                }
+                    if (leftHand.PinchStrength <= release)
+                    {
+                        _isLeftGrabbing = false;
 
+                    }
+
+                    Vector3 mount = leftHand.PalmPosition - leftHandGrabPos;
+                    centerPoint.position = cameraGrabPos - mount * camGrabSpeed;
+                }
             }
+
+            /*float leftHandRoll = Mathf.Clamp(Mathf.DeltaAngle(leftHand.Rotation.eulerAngles.z, 0), -60, 60);
+            float leftHandPitch = Mathf.Clamp(Mathf.DeltaAngle(leftHand.Rotation.eulerAngles.x, 0), -60, 60);
+
+            if (Mathf.Abs(leftHandRoll) > 15) //death zone
+            {
+                float amount = leftHandRoll / 60.0f * CamMoveSpeed * Time.deltaTime;
+                Camera.main.transform.Translate(amount, 0, 0, Space.World);
+                centerPoint.transform.Translate(amount, 0, 0, Space.World);
+
+                //float rAmount = leftHandRoll / 60.0f * CamTurnSpeed * Time.deltaTime;
+                //Camera.main.transform.Rotate(0, rAmount, 0, Space.World);
+                //centerPoint.transform.Rotate(0, rAmount, 0, Space.World);
+            }
+            if (Mathf.Abs(leftHandPitch) > 20)
+            {
+                float amount = leftHandPitch / 60.0f * CamMoveSpeed * Time.deltaTime;
+                Camera.main.transform.Translate(0, 0, amount, Space.World);
+                centerPoint.transform.Translate(0, 0, amount, Space.World);
+            }*/
 
             if (rightHand != null)
             {
                 transform.position = centerPoint.position + centerOffset + rightHand.PalmPosition;
 
-                //Vector3 rightHandDelta = (rightHand.PalmPosition - prevRightHandTrack) * 1000;
-                //prevRightHandTrack = rightHand.PalmPosition;
 
+                Vector3 rightHandDelta = (rightHand.PalmPosition - prevRightHandTrack) * 1000;
+                prevRightHandTrack = rightHand.PalmPosition;
 
                 float hx = Mathf.Clamp(rightHand.PalmPosition.x / 0.3f, -1, 1);
                 float hz = Mathf.Clamp(rightHand.PalmPosition.z / 0.3f, -1, 1);
@@ -150,7 +178,7 @@ public class Claw : MonoBehaviour
 
                 //print(rightHand.PalmPosition.ToString("F2"));
 
-                float strength = rightHand.GrabStrength;
+                float strength = rightHand.PinchStrength;
 
 
                 //debugTextField.text = strength.ToString("F2");
@@ -159,14 +187,16 @@ public class Claw : MonoBehaviour
 
                 //print(strength);
 
-                if (!_isGrabbing && strength > grab)
+                if (!_isGrabbing && strength >= grab && Time.time > releaseObjTime + 1)
                 {
                     _isGrabbing = true;
                     OnGrab();
                 }
-                else if ((_isGrabbing && strength <= release))// || Mathf.Abs(rightHandDelta.magnitude) > rightHandTrackSpeed)
+                else if ((_isGrabbing && strength <= release) || Mathf.Abs(rightHandDelta.magnitude) > rightHandTrackSpeed)
                 {
+                    print(rightHandDelta.magnitude);
                     _isGrabbing = false;
+                    releaseObjTime = Time.time;
                     OnRelease();
                 }
             }
@@ -182,10 +212,10 @@ public class Claw : MonoBehaviour
 
         }
 
-        Vector3 lookDir = transform.position - Camera.main.transform.position; //direction camera to look
+        /*Vector3 lookDir = transform.position - Camera.main.transform.position; //direction camera to look
         lookDir.x = 0;
 
-        Camera.main.transform.rotation = Quaternion.LookRotation(lookDir); //turns rotation 
+        Camera.main.transform.rotation = Quaternion.LookRotation(lookDir); //turns rotation */
 
     }
 

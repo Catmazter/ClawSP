@@ -22,13 +22,19 @@ public class Claw : MonoBehaviour
     [SerializeField] float CamTurnSpeed = 90;
     [SerializeField] Vector3 centerOffset = Vector3.zero;
 
-    Vector3 prevRightHandTrack = Vector3.zero;
+
+    Vector3 prevLeftHandTrack = Vector3.zero;
+    [SerializeField] float leftHandTrackSpeed = 10;
+    bool validLeftHandSpeed = false;
     Vector3 leftHandGrabPos = Vector3.zero;
+    bool _isLeftGrabbing = false;
+
     Vector3 cameraGrabPos = Vector3.zero;
 
-    bool _isLeftGrabbing = false;
-    [SerializeField] float camGrabSpeed = 1.25f;
+    Vector3 prevRightHandTrack = Vector3.zero;
+    [SerializeField] float camGrabSpeed = 3.0f;
     [SerializeField] float rightHandTrackSpeed = 10;
+    bool validRighHandSpeed = false;
 
     float releaseObjTime = 0;
 
@@ -36,6 +42,8 @@ public class Claw : MonoBehaviour
 
     GameObject item; // what I'm touching
     GrabObject holdItem; //what I alr grabbed
+
+    
 
 
 
@@ -79,6 +87,26 @@ public class Claw : MonoBehaviour
 
             if (leftHand != null)
             {
+                Vector3 leftHandDelta = (leftHand.PalmPosition - prevLeftHandTrack) * 1000;
+                prevLeftHandTrack = leftHand.PalmPosition;
+
+                float moveLimit = camGrabSpeed;
+
+                if (holdItem != null)
+                {
+                    moveLimit = holdItem.speedFall;
+                }
+
+                if (leftHand.PinchStrength >= grab)
+                {
+                    if (validLeftHandSpeed && Mathf.Abs(leftHandDelta.magnitude) > moveLimit)
+                    {
+                        _isGrabbing = false;
+                        releaseObjTime = Time.time;
+                        OnRelease();
+                    }
+                }
+
                 if (!_isLeftGrabbing)
                 {
 
@@ -97,10 +125,23 @@ public class Claw : MonoBehaviour
 
                     }
 
+                    float leftMoveLimit = camGrabSpeed;
+
+                    if (holdItem != null)
+                    {
+                        leftMoveLimit = holdItem.camSpeed;
+                    }
+
                     Vector3 mount = leftHand.PalmPosition - leftHandGrabPos;
-                    centerPoint.position = cameraGrabPos - mount * camGrabSpeed;
+                    centerPoint.position = cameraGrabPos - mount * leftMoveLimit;
                 }
+
+                validLeftHandSpeed = true;
             }
+            else
+            { validLeftHandSpeed = false; }
+
+
 
             /*float leftHandRoll = Mathf.Clamp(Mathf.DeltaAngle(leftHand.Rotation.eulerAngles.z, 0), -60, 60);
             float leftHandPitch = Mathf.Clamp(Mathf.DeltaAngle(leftHand.Rotation.eulerAngles.x, 0), -60, 60);
@@ -132,33 +173,36 @@ public class Claw : MonoBehaviour
 
                 float hx = Mathf.Clamp(rightHand.PalmPosition.x / 0.3f, -1, 1);
                 float hz = Mathf.Clamp(rightHand.PalmPosition.z / 0.3f, -1, 1);
-                float hy = Mathf.Clamp(rightHand.PalmPosition.y / 0.3f, -1, 1);
+                float hy = Mathf.Clamp(rightHand.PalmPosition.y / 0.3f, 0.2f, 1.5f);
 
-                PlatformController.singleton.Heave = MapRange(hy, -1, 1, -5, 5);
+                PlatformController.singleton.Heave = MapRange(hy, 0.2f, 1.5f, -5, 8);
+                /*
                 //PlatformController.singleton.Sway = MapRange(hx, -1,1, -24, 23);
-                //PlatformController.singleton.Surge = MapRange(hz, -1,1, -22, 22);
+                //PlatformController.singleton.Surge = MapRange(hz, -1,1, -22, 22);*/
 
-                float swayMin, swayMax;
-                float surgeMin, surgeMax;
+                float swayMin = -18;
+                float swayMax = 18;
+                float surgeMin = -18;
+                float surgeMax = 18;
 
-                if (PlatformController.singleton.Heave >= 0)
-                {
-                    // Platform up +5
-                    swayMin = -22f;
-                    swayMax = 22f;
+                //if (PlatformController.singleton.Heave >= 0)
+                //{
+                //    // Platform up +5
+                //    swayMin = -22f;
+                //    swayMax = 22f;
 
-                    surgeMin = -24f;
-                    surgeMax = 23f;
-                }
-                else
-                {
-                    // Platform down -5
-                    swayMin = -11f;
-                    swayMax = 11f;
+                //    surgeMin = -24f;
+                //    surgeMax = 23f;
+                //}
+                //else
+                //{
+                //    // Platform down -5
+                //    swayMin = -11f;
+                //    swayMax = 11f;
 
-                    surgeMin = -17f;
-                    surgeMax = 12f;
-                }
+                //    surgeMin = -17f;
+                //    surgeMax = 12f;
+                //}
 
                 PlatformController.singleton.Sway = MapRange(hx, -1, 1, swayMin, swayMax);
                 PlatformController.singleton.Surge = MapRange(hz, -1, 1, surgeMin, surgeMax);
@@ -166,48 +210,59 @@ public class Claw : MonoBehaviour
 
                 if (holdItem != null)
                 {
-                    if (holdItem.weight > 0)
+                    if (holdItem.speedFall > 0)
                     {
                         PlatformController.singleton.Pitch = Random.Range(-holdItem.weight, holdItem.weight);
                         PlatformController.singleton.Roll = Random.Range(-holdItem.weight, holdItem.weight);
                     }
 
                 }
+                else
+                {
+                    PlatformController.singleton.Pitch = 0; PlatformController.singleton.Roll = 0;
+                }
 
 
-
-                //print(rightHand.PalmPosition.ToString("F2"));
 
                 float strength = rightHand.PinchStrength;
+                float moveLimit = 0;
 
-
-                //debugTextField.text = strength.ToString("F2");
-
-                //debugTextField.text += rightHand.Confidence.ToString("F2");
-
-                //print(strength);
-
-                if (!_isGrabbing && strength >= grab && Time.time > releaseObjTime + 1)
+                if (holdItem != null)
                 {
-                    _isGrabbing = true;
-                    OnGrab();
+                    moveLimit = holdItem.speedFall;
                 }
-                else if ((_isGrabbing && strength <= release) || Mathf.Abs(rightHandDelta.magnitude) > rightHandTrackSpeed)
+                if (!_isGrabbing) // if not currently grabbing
                 {
-                    print(rightHandDelta.magnitude);
-                    _isGrabbing = false;
-                    releaseObjTime = Time.time;
-                    OnRelease();
+                    // are we trying to grab?
+                    if (strength > grab && Time.time > releaseObjTime + 1)
+                    {
+                        _isGrabbing = true;
+                        OnGrab();
+                    }
                 }
+                else if (_isGrabbing) // if  currently grabbing
+                {
+                    // should we release due to grab strength (hand tracker)?
+                    if (strength <= release)
+                    {
+                        _isGrabbing = false;
+                        releaseObjTime = Time.time;
+                        OnRelease();
+                    }
+                    // should we release due to moving too fast?
+                    else if (validRighHandSpeed && Mathf.Abs(rightHandDelta.magnitude) > moveLimit)
+                    {
+                        _isGrabbing = false;
+                        releaseObjTime = Time.time;
+                        OnRelease();
+                    }
+                }
+                validRighHandSpeed = true;
             }
-            //else
-            //{
-            //    if (_isGrabbing)
-            //    {
-            //        _isGrabbing = false;
-            //        OnRelease();
-            //    }
-            //}
+            else
+            {
+                validRighHandSpeed = false;
+            }
 
 
         }

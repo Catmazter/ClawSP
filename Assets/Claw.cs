@@ -42,6 +42,8 @@ public class Claw : MonoBehaviour
 
     [SerializeField] Transform viewCam;
 
+    Animator animator;
+
     /// OBJECTS ///
 
     GameObject item; // what I'm touching
@@ -53,6 +55,7 @@ public class Claw : MonoBehaviour
 
     void Start()
     {
+        animator = GetComponent<Animator>();
         body = GetComponent<Rigidbody>();
         PlatformController.singleton.Init("COM5", 115200);
         viewCam = centerPoint;
@@ -114,6 +117,7 @@ public class Claw : MonoBehaviour
                     moveLimit = holdItem.speedFall;
                 }
 
+               /* //// left hand (if pinch too fast it falls
                 if (leftHand.PinchStrength >= grab)
                 {
                     if (validLeftHandSpeed && Mathf.Abs(leftHandDelta.magnitude) > moveLimit)
@@ -122,7 +126,7 @@ public class Claw : MonoBehaviour
                         releaseObjTime = Time.time;
                         OnRelease();
                     }
-                }
+                } */
 
                 if (!_isLeftGrabbing)
                 {
@@ -242,6 +246,9 @@ public class Claw : MonoBehaviour
 
 
                 float strength = rightHand.PinchStrength;
+
+                animator.SetFloat("Close", strength);
+
                 float moveLimit = 0;
 
                 if (holdItem != null)

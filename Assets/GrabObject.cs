@@ -34,8 +34,8 @@ public class GrabObject : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        //print(collision.relativeVelocity);
-        if (collision.relativeVelocity.y > 1)
+        print(collision.relativeVelocity);
+        if (collision.relativeVelocity.y > 2)
         {
             for (int i = 0; i < grabObjs.Length; i++)
             {

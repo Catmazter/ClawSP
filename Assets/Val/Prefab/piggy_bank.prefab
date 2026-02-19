@@ -10,27 +10,27 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.24
+      value: 1.13
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.24
+      value: 1.13
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.24
+      value: 1.13
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.334
+      value: -0.245
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.1339718
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.13451001
+      value: 3.2883577
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -64,6 +64,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: ec3218aaefc21c44c9d279ce3101a13e, type: 2}
     - target: {fileID: 919132149155446097, guid: 54935c7d251f53845903edc7fb6c995c, type: 3}
       propertyPath: m_Name
       value: piggy_bank
@@ -147,5 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08a8baf1c27d4294cbb643c3224b7bea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabObject
-  weight: 2
+  speedFall: 1
   points: 20
+  camSpeed: 3
+  weight: 2

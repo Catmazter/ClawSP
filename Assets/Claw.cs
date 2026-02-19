@@ -21,6 +21,8 @@ public class Claw : MonoBehaviour
     [SerializeField] float CamMoveSpeed = 1;
     [SerializeField] float CamTurnSpeed = 90;
     [SerializeField] Vector3 centerOffset = Vector3.zero;
+   
+    Vector3 camHome = Vector3.zero;
 
 
     Vector3 prevLeftHandTrack = Vector3.zero;
@@ -38,6 +40,8 @@ public class Claw : MonoBehaviour
 
     float releaseObjTime = 0;
 
+    [SerializeField] Transform viewCam;
+
     /// OBJECTS ///
 
     GameObject item; // what I'm touching
@@ -51,6 +55,8 @@ public class Claw : MonoBehaviour
     {
         body = GetComponent<Rigidbody>();
         PlatformController.singleton.Init("COM5", 115200);
+        viewCam = centerPoint;
+        camHome = Camera.main.transform.localPosition;
 
     }
 
@@ -78,7 +84,18 @@ public class Claw : MonoBehaviour
     void Update()
     {
 
-
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (viewCam.gameObject.name == "CenterPoint")
+            {
+                viewCam = Camera.main.transform;
+            }
+            else
+            {
+                Camera.main.transform.localPosition = camHome;
+                viewCam = centerPoint.transform;
+            }
+        }
 
         if (curFrame != null && curFrame.Hands.Count > 0)
         {
@@ -114,7 +131,7 @@ public class Claw : MonoBehaviour
                     {
                         _isLeftGrabbing = true;
                         leftHandGrabPos = leftHand.PalmPosition;
-                        cameraGrabPos = centerPoint.position;
+                        cameraGrabPos = viewCam.position;
                     }
                 }
                 else
@@ -133,7 +150,7 @@ public class Claw : MonoBehaviour
                     }
 
                     Vector3 mount = leftHand.PalmPosition - leftHandGrabPos;
-                    centerPoint.position = cameraGrabPos - mount * leftMoveLimit;
+                    viewCam.position = cameraGrabPos - mount * leftMoveLimit;
                 }
 
                 validLeftHandSpeed = true;
